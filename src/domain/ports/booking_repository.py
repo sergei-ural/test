@@ -56,3 +56,14 @@ class BookingRepository(ABC):
         limit: int = 20,
     ) -> list[Booking]:
         ...
+
+    @abstractmethod
+    async def count_by(
+        self,
+        id: int | None = None,
+        datetime_: datetime | None = None,
+        name: str | None = None,
+        service_type: str | None = None,
+        status: BookingStatus | None = None,
+    ) -> int:
+        ...

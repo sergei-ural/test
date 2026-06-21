@@ -38,3 +38,10 @@ class BookingResponse(BaseModel):
             service_type=booking.service_type,
             status=booking.status,
         )
+
+
+class BookingListResponse(BaseModel):
+    items: list[BookingResponse]
+    total: int
+    offset: int
+    limit: int

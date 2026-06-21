@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,26 @@ from adapters.persistence.models import BookingModel
 class SQLAlchemyBookingRepository(BookingRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    def _apply_filters(
+        self,
+        query,
+        id: int | None = None,
+        datetime_: datetime | None = None,
+        name: str | None = None,
+        service_type: str | None = None,
+        status: BookingStatus | None = None,
+    ):
+        for column, value in (
+            (BookingModel.id, id),
+            (BookingModel.datetime, datetime_),
+            (BookingModel.name, name),
+            (BookingModel.service_type, service_type),
+            (BookingModel.status, status),
+        ):
+            if value is not None:
+                query = query.where(column == value)
+        return query
 
     async def add(self, booking: Booking) -> None:
         model = BookingModel(
@@ -86,17 +106,14 @@ class SQLAlchemyBookingRepository(BookingRepository):
         offset: int = 0,
         limit: int = 20,
     ) -> list[Booking]:
-        query = select(BookingModel)
-        for column, value in (
-            (BookingModel.id, id),
-            (BookingModel.datetime, datetime_),
-            (BookingModel.name, name),
-            (BookingModel.service_type, service_type),
-            (BookingModel.status, status),
-        ):
-            if value is not None:
-                query = query.where(column == value)
-
+        query = self._apply_filters(
+            select(BookingModel),
+            id=id,
+            datetime_=datetime_,
+            name=name,
+            service_type=service_type,
+            status=status,
+        )
         query = query.order_by(BookingModel.id).offset(offset).limit(limit)
         return [
             Booking(
@@ -108,3 +125,21 @@ class SQLAlchemyBookingRepository(BookingRepository):
             )
             for model in (await self._session.scalars(query)).all()
         ]
+
+    async def count_by(
+        self,
+        id: int | None = None,
+        datetime_: datetime | None = None,
+        name: str | None = None,
+        service_type: str | None = None,
+        status: BookingStatus | None = None,
+    ) -> int:
+        query = self._apply_filters(
+            select(func.count()).select_from(BookingModel),
+            id=id,
+            datetime_=datetime_,
+            name=name,
+            service_type=service_type,
+            status=status,
+        )
+        return await self._session.scalar(query) or 0

@@ -47,15 +47,20 @@ async def test_list_bookings_filters_by_status_and_pagination(
     response = await client.get("/bookings", params={"status": BookingStatus.CONFIRMED, "offset": 0, "limit": 10})
 
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": confirmed.id,
-            "datetime": confirmed.datetime.isoformat(),
-            "name": confirmed.name,
-            "service_type": confirmed.service_type,
-            "status": confirmed.status,
-        }
-    ]
+    assert response.json() == {
+        "items": [
+            {
+                "id": confirmed.id,
+                "datetime": confirmed.datetime.isoformat(),
+                "name": confirmed.name,
+                "service_type": confirmed.service_type,
+                "status": confirmed.status,
+            }
+        ],
+        "total": 1,
+        "offset": 0,
+        "limit": 10,
+    }
 
 
 async def test_list_bookings_supports_pagination(
@@ -72,8 +77,20 @@ async def test_list_bookings_supports_pagination(
     response = await client.get("/bookings", params={"offset": 1, "limit": 1})
 
     assert response.status_code == 200
-    assert len(response.json()) == 1
-    assert response.json()[0]["id"] == second.id
+    assert response.json() == {
+        "items": [
+            {
+                "id": second.id,
+                "datetime": second.datetime.isoformat(),
+                "name": second.name,
+                "service_type": second.service_type,
+                "status": second.status,
+            }
+        ],
+        "total": 3,
+        "offset": 1,
+        "limit": 1,
+    }
 
 
 async def test_cancel_booking_deletes_pending_booking(

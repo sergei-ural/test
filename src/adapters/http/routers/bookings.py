@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from adapters.http.factories import get_booking_repository, get_booking_service, get_create_booking_use_case
 from adapters.http.rate_limit import enforce_create_booking_rate_limit
-from adapters.http.schemas import BookingResponse, CreateBookingRequest, CreateBookingResponse
+from adapters.http.schemas import BookingListResponse, BookingResponse, CreateBookingRequest, CreateBookingResponse
 from domain.application_services.booking import BookingServiceApp
 from domain.entities.booking import BookingStatus
 from domain.ports.booking_repository import BookingNotFound, BookingNotPending, BookingRepository
@@ -42,16 +42,21 @@ async def get_booking(
     return BookingResponse.from_booking(booking)
 
 
-# TODO: Тут наверное нужно сделать пагинацию со стороны клиентского кода
-@booking_router.get("/bookings", response_model=list[BookingResponse])
+@booking_router.get("/bookings", response_model=BookingListResponse)
 async def list_bookings(
     status: BookingStatus | None = Query(default=None),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
     booking_repository: BookingRepository = Depends(get_booking_repository),
-) -> list[BookingResponse]:
+) -> BookingListResponse:
     bookings = await booking_repository.find_by(status=status, offset=offset, limit=limit)
-    return [BookingResponse.from_booking(booking) for booking in bookings]
+    total = await booking_repository.count_by(status=status)
+    return BookingListResponse(
+        items=[BookingResponse.from_booking(booking) for booking in bookings],
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
 
 
 @booking_router.delete("/bookings/{booking_id}")
@@ -64,8 +69,5 @@ async def cancel_booking(
     except BookingNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="booking not found") from exc
     except BookingNotPending as exc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="only pending bookings can be cancelled",
-        ) from exc
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="only pending can be cancelled") from exc
     return Response(status_code=status.HTTP_200_OK)

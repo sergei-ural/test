@@ -131,3 +131,21 @@ async def test_find_by_pagination(booking_repository: SQLAlchemyBookingRepositor
     await booking_repository.add(booking3)
 
     assert await booking_repository.find_by(offset=1, limit=1) == [booking2]
+
+
+async def test_count_by_status(booking_repository: SQLAlchemyBookingRepository) -> None:
+    booking1 = make_booking(name="name1", status=BookingStatus.PENDING)
+    booking2 = make_booking(name="name2", status=BookingStatus.CONFIRMED)
+    await booking_repository.add(booking1)
+    await booking_repository.add(booking2)
+
+    assert await booking_repository.count_by(status=BookingStatus.CONFIRMED) == 1
+
+
+async def test_count_by(booking_repository: SQLAlchemyBookingRepository) -> None:
+    booking1 = make_booking(name="name1", status=BookingStatus.PENDING)
+    booking2 = make_booking(name="name2", status=BookingStatus.CONFIRMED)
+    await booking_repository.add(booking1)
+    await booking_repository.add(booking2)
+
+    assert await booking_repository.count_by() == 2
