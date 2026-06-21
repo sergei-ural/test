@@ -15,7 +15,6 @@ alembic = "^1.14"
 pydantic-settings = "^2.7"
 aiosqlite = "^0.21"
 asyncpg = "^0.30"
-psycopg2-binary = "^2.9"
 celery = { version = "^5.4", extras = ["redis"] }
 fastapi = "^0.115"
 uvicorn = { version = "^0.34", extras = ["standard"] }
