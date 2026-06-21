@@ -4,10 +4,10 @@ Backend-сервис для записи на встречи: REST API, Celery-�
 
 ## Запуск
 
-1. Скопируйте переменные окружения:
+1. Создайте `.env` из шаблона:
 
 ```bash
-cp .env.example .env
+make env
 ```
 
 2. Поднимите стек:
@@ -22,11 +22,11 @@ docker compose up --build
 - PostgreSQL: localhost:5433
 - Redis: localhost:6380
 
-Миграции применяются отдельным одноразовым контейнером `migrate` перед стартом `app` и `celery`.
+Миграции применяются отдельным одноразовым контейнером `migrate` перед стартом `app` и `celery`. В Docker переменные окружения задаются в `docker-compose.yml`.
 
 ## Тесты
 
-Тесты используют SQLite in-memory и Celery eager mode, Docker для запуска не нужен:
+Тесты читают настройки из `.env` (при отсутствии файла `make test` создаст его из `.env.example`):
 
 ```bash
 poetry install
@@ -40,7 +40,7 @@ make test
 | POST | `/bookings` | Создать бронь (`name`, `datetime`, `service_type`), вернуть `id` |
 | GET | `/bookings/{id}` | Получить бронь по id |
 | GET | `/bookings` | Список броней (`status`, `offset`, `limit`) |
-| DELETE | `/bookings/{id}` | Отменить бронь (только `pending`) |
+| DELETE | `/bookings/{id}` | Отменить бронь (только `pending`, статус меняется на `failed`) |
 
 Пример создания брони:
 
@@ -59,14 +59,14 @@ curl -X POST http://localhost:8000/bookings \
 5. Осознано на уровне сервисов, использую настоящий репо (делать Fake посчитал избыточным в этой ситуации)
 6. Осознано не тестировал функционал Retry
 7. Осознано не делаю в репозитории update или delete_by так как это крайние меры, когда не хватает производительности. В остальных ситуациях лучше получить данные с помощью богатой модели проверить инварианты и только потом просить что-то удалять/обновлять
-8. 
 
 ## Стек и поведение сервиса
 
 - FastAPI + Pydantic для REST API, Celery + Redis для фонового подтверждения брони
 - `domain` / `adapters`: сущности, порты, application service, use case `CreateBookingUseCase`, HTTP, persistence, Celery, stub-клиент
 - `get_by` поверх `find_by` для выборки ровно одной записи: 0 — `BookingNotFound`, больше одного — `FindBookingMoreThanOne`
-- Идемпотентность воркера: повторная обработка не-`pending` брони завершается без изменений
-- Stub-клиент с ~15% сбоем, retry с экспоненциальным backoff, после исчерпания попыток — статус `failed`
-- JSON-логирование, rate limiting на `POST /bookings` (10 req/min с IP), `Makefile` (`dev`, `test`, `lint`)
+- Идемпотентность воркера: повторный запуск с тем же `booking_id` не создаёт дубль и не меняет уже установленный статус
+- Stub-клиент с ~15% сбоем; при `ConfirmError` задача ретраится с экспоненциальным backoff, пока подтверждение не пройдёт успешно
+- Статус `failed` выставляется только при отмене клиентом через `DELETE /bookings/{id}`
+- JSON-логирование, rate limiting на `POST /bookings` (10 req/min с IP), `Makefile` (`env`, `dev`, `test`, `lint`)
 - `POST /bookings`: новая бронь — `201` + `{"id": ...}`, дубликат — `200` + `{"id": ...}` без повторной постановки задачи в очередь

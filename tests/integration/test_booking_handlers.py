@@ -3,7 +3,7 @@ import pytest
 from adapters.http.rate_limit import create_booking_rate_limiter
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from domain.entities.booking import BookingStatus
-from tests.factories import make_booking
+from tests.factories import make_booking, make_from
 
 pytestmark = pytest.mark.integration
 
@@ -93,7 +93,7 @@ async def test_list_bookings_supports_pagination(
     }
 
 
-async def test_cancel_booking_deletes_pending_booking(
+async def test_cancel_booking_marks_pending_booking_as_failed(
     client,
     booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
@@ -103,7 +103,7 @@ async def test_cancel_booking_deletes_pending_booking(
     response = await client.delete(f"/bookings/{booking.id}")
 
     assert response.status_code == 200
-    assert await booking_repository.find_by() == []
+    assert await booking_repository.find_by() == [make_from(booking, status=BookingStatus.FAILED)]
 
 
 async def test_cancel_booking_returns_404_when_not_found(client) -> None:
