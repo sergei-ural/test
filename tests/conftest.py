@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from adapters.persistence.booking_repository import SqlAlchemyBookingRepository
+from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.persistence.database import create_db_engine
 from adapters.persistence.models import Base
 
@@ -18,5 +18,5 @@ async def session() -> AsyncSession:
 
 
 @pytest.fixture
-def booking_repository(session: AsyncSession) -> SqlAlchemyBookingRepository:
-    return SqlAlchemyBookingRepository(session)
+def booking_repository(session: AsyncSession) -> SQLAlchemyBookingRepository:
+    return SQLAlchemyBookingRepository(session)

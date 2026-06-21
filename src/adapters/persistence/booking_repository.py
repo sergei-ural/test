@@ -11,7 +11,7 @@ from domain.ports.booking_repository import (
 from adapters.persistence.models import BookingModel
 
 
-class SqlAlchemyBookingRepository(BookingRepository):
+class SQLAlchemyBookingRepository(BookingRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 

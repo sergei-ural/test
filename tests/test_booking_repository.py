@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from adapters.persistence.booking_repository import SqlAlchemyBookingRepository
+from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.persistence.models import BookingModel
 from domain.entities.booking import Booking, BookingStatus
 from domain.ports.booking_repository import BookingAlreadyExist, BookingNotFound
@@ -33,7 +33,7 @@ async def get_all_bookings(session: AsyncSession) -> list[Booking]:
     ]
 
 
-async def test_add(booking_repository: SqlAlchemyBookingRepository, session: AsyncSession) -> None:
+async def test_add(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
     booking = make_booking(id=None)
 
     await booking_repository.add(booking)
@@ -42,7 +42,7 @@ async def test_add(booking_repository: SqlAlchemyBookingRepository, session: Asy
     assert await get_all_bookings(session) == [make_booking(id=booking.id)]
 
 
-async def test_add_duplicate_raises(booking_repository: SqlAlchemyBookingRepository, session: AsyncSession) -> None:
+async def test_add_duplicate_raises(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
     booking = make_booking()
     await booking_repository.add(booking)
 
@@ -53,7 +53,7 @@ async def test_add_duplicate_raises(booking_repository: SqlAlchemyBookingReposit
     assert await get_all_bookings(session) == [make_booking(id=booking.id)]
 
 
-async def test_remove_existing(booking_repository: SqlAlchemyBookingRepository, session: AsyncSession) -> None:
+async def test_remove_existing(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
     booking = await booking_repository.add(make_booking())
 
     await booking_repository.remove(booking)
@@ -61,14 +61,14 @@ async def test_remove_existing(booking_repository: SqlAlchemyBookingRepository, 
     assert await get_all_bookings(session) == []
 
 
-async def test_remove_not_found_raises(booking_repository: SqlAlchemyBookingRepository, session: AsyncSession) -> None:
+async def test_remove_not_found_raises(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
     with pytest.raises(BookingNotFound):
         await booking_repository.remove(make_booking(id=999))
 
     assert await get_all_bookings(session) == []
 
 
-async def test_find_all(booking_repository: SqlAlchemyBookingRepository) -> None:
+async def test_find_all(booking_repository: SQLAlchemyBookingRepository) -> None:
     booking1 = make_booking(name="name1", status=BookingStatus.PENDING)
     booking2 = make_booking(name="name2", status=BookingStatus.CONFIRMED)
     booking3 = make_booking(name="name3", status=BookingStatus.CANCELLED)
@@ -81,7 +81,7 @@ async def test_find_all(booking_repository: SqlAlchemyBookingRepository) -> None
     assert got == [booking1, booking2, booking3]
 
 
-async def test_find_by_status(booking_repository: SqlAlchemyBookingRepository) -> None:
+async def test_find_by_status(booking_repository: SQLAlchemyBookingRepository) -> None:
     booking1 = make_booking(name="name1", status=BookingStatus.PENDING)
     booking2 = make_booking(name="name2", status=BookingStatus.CONFIRMED)
     await booking_repository.add(booking1)
@@ -92,7 +92,7 @@ async def test_find_by_status(booking_repository: SqlAlchemyBookingRepository) -
     assert got == [booking2]
 
 
-async def test_find_by_name(booking_repository: SqlAlchemyBookingRepository) -> None:
+async def test_find_by_name(booking_repository: SQLAlchemyBookingRepository) -> None:
     booking1 = make_booking(name="name1", status=BookingStatus.PENDING)
     booking2 = make_booking(name="name2", status=BookingStatus.CONFIRMED)
     await booking_repository.add(booking1)
@@ -103,7 +103,7 @@ async def test_find_by_name(booking_repository: SqlAlchemyBookingRepository) -> 
     assert got == [booking1]
 
 
-async def test_find_by_service_type(booking_repository: SqlAlchemyBookingRepository) -> None:
+async def test_find_by_service_type(booking_repository: SQLAlchemyBookingRepository) -> None:
     booking1 = make_booking(name="name1", service_type="service_type1")
     booking2 = make_booking(name="name2", service_type="service_type2")
     await booking_repository.add(booking1)
@@ -114,7 +114,7 @@ async def test_find_by_service_type(booking_repository: SqlAlchemyBookingReposit
     assert got == [booking1]
 
 
-async def test_find_by_pagination(booking_repository: SqlAlchemyBookingRepository) -> None:
+async def test_find_by_pagination(booking_repository: SQLAlchemyBookingRepository) -> None:
     booking1 = make_booking(name="name1")
     booking2 = make_booking(name="name2")
     booking3 = make_booking(name="name3")
