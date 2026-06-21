@@ -1,25 +1,20 @@
 import pytest
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
-from adapters.persistence.database import create_db_engine
-from adapters.persistence.models import Base, BookingModel
-from adapters.settings import settings
+from adapters.persistence.database import engine, session_factory
+from adapters.persistence.models import Base
 
 
-# TODO: Разделить на фикстуру с движком и сессию.
 @pytest.fixture
 async def session() -> AsyncSession:
-    engine = create_db_engine(settings.database_url)
     async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
     async with session_factory() as db_session:
-        await db_session.execute(delete(BookingModel))
-        await db_session.commit()
         yield db_session
-    await engine.dispose()
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.drop_all)
 
 
 @pytest.fixture
