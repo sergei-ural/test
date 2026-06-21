@@ -1,8 +1,10 @@
 import asyncio
+from unittest.mock import MagicMock
 
 import pytest
 from celery.result import EagerResult
 
+from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.tasks.confirm_booking import confirm_booking_task
 from domain.entities.booking import BookingStatus
 from domain.ports.booking_repository import BookingNotFound
@@ -13,8 +15,8 @@ pytestmark = pytest.mark.integration
 
 @pytest.mark.parametrize("patch_random", [1], indirect=True)
 async def test_confirm_booking_task_confirms_pending_booking(
-    booking_repository,
-    patch_random,
+    booking_repository: SQLAlchemyBookingRepository,
+    patch_random: MagicMock,
 ) -> None:
     booking = make_booking()
     await booking_repository.add(booking)
@@ -27,8 +29,8 @@ async def test_confirm_booking_task_confirms_pending_booking(
 
 @pytest.mark.parametrize("patch_random", [1], indirect=True)
 async def test_confirm_booking_task_raises_when_booking_not_found(
-    booking_repository,
-    patch_random,
+    booking_repository: SQLAlchemyBookingRepository,
+    patch_random: MagicMock,
 ) -> None:
     with pytest.raises(BookingNotFound):
         await asyncio.to_thread(lambda: confirm_booking_task.apply(args=[999]).get())
@@ -39,8 +41,8 @@ async def test_confirm_booking_task_raises_when_booking_not_found(
 
 @pytest.mark.parametrize("patch_random", [1], indirect=True)
 async def test_confirm_booking_task_raises_when_booking_is_not_pending(
-    booking_repository,
-    patch_random,
+    booking_repository: SQLAlchemyBookingRepository,
+    patch_random: MagicMock,
 ) -> None:
     booking = make_booking(status=BookingStatus.CONFIRMED)
     await booking_repository.add(booking)

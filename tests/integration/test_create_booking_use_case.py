@@ -1,19 +1,22 @@
+from unittest.mock import MagicMock
+
 import pytest
 
+from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
+from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 from adapters.tasks.confirm_booking import CeleryTaskManager
 from domain.application_services.booking import BookingServiceApp
 from domain.use_cases.create_booking import CreateBookingUseCase
 from tests.dummy import make_dummy
 from tests.factories import make_booking
-from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 
 pytestmark = pytest.mark.integration
 
 
 async def test_create_booking_use_case_returns_id_for_new_booking(
-    booking_repository,
-    stub_booking_confirmed_client,
-    confirm_booking_task_delay_mock,
+    booking_repository: SQLAlchemyBookingRepository,
+    stub_booking_confirmed_client: StubBookingConfirmClient,
+    confirm_booking_task_delay_mock: MagicMock,
 ) -> None:
     use_case = CreateBookingUseCase(
         BookingServiceApp(booking_repository, stub_booking_confirmed_client, CeleryTaskManager()),
@@ -33,8 +36,8 @@ async def test_create_booking_use_case_returns_id_for_new_booking(
 
 
 async def test_create_booking_use_case_returns_existing_id_without_enqueue(
-    booking_repository,
-    confirm_booking_task_delay_mock,
+    booking_repository: SQLAlchemyBookingRepository,
+    confirm_booking_task_delay_mock: MagicMock,
 ) -> None:
     existing = make_booking()
     await booking_repository.add(existing)

@@ -1,6 +1,8 @@
 from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
+from httpx import AsyncClient
 
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from tests.factories import make_booking
@@ -9,10 +11,10 @@ pytestmark = pytest.mark.integration
 
 
 async def test_create_booking_returns_201_and_enqueues_confirm(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
-    base_booking_payload,
-    confirm_booking_task_delay_mock,
+    base_booking_payload: dict[str, str],
+    confirm_booking_task_delay_mock: MagicMock,
 ) -> None:
     response = await client.post("/bookings", json=base_booking_payload)
 
@@ -24,10 +26,10 @@ async def test_create_booking_returns_201_and_enqueues_confirm(
 
 
 async def test_create_booking_succeeds_when_booking_already_exists(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
-    base_booking_payload,
-    confirm_booking_task_delay_mock,
+    base_booking_payload: dict[str, str],
+    confirm_booking_task_delay_mock: MagicMock,
 ) -> None:
     existing = make_booking(
         datetime_=datetime.fromisoformat(base_booking_payload["datetime"]),
@@ -43,7 +45,7 @@ async def test_create_booking_succeeds_when_booking_already_exists(
     confirm_booking_task_delay_mock.assert_not_called()
 
 
-async def test_create_booking_rejects_past_datetime(client) -> None:
+async def test_create_booking_rejects_past_datetime(client: AsyncClient) -> None:
     response = await client.post(
         "/bookings",
         json={

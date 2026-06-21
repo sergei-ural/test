@@ -1,5 +1,9 @@
+from unittest.mock import MagicMock
+
 import pytest
 
+from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
+from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 from domain.application_services.booking import BookingServiceApp
 from domain.entities.booking import BookingStatus
 from domain.ports.booking_confirmed_client import ConfirmError, BookingConfirmClient
@@ -13,9 +17,9 @@ pytestmark = pytest.mark.integration
 
 @pytest.mark.parametrize("patch_random", [1], indirect=True)
 async def test_confirm_calls_client_for_pending_booking(
-    booking_repository,
-    stub_booking_confirmed_client,
-    patch_random,
+    booking_repository: SQLAlchemyBookingRepository,
+    stub_booking_confirmed_client: StubBookingConfirmClient,
+    patch_random: MagicMock,
 ) -> None:
     booking = make_booking()
     await booking_repository.add(booking)
@@ -28,7 +32,7 @@ async def test_confirm_calls_client_for_pending_booking(
 
 
 async def test_confirm_raises_when_pending_booking_not_found(
-    booking_repository,
+    booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
     with pytest.raises(BookingNotFound):
         await BookingServiceApp(
@@ -38,12 +42,11 @@ async def test_confirm_raises_when_pending_booking_not_found(
         ).confirm(999)
 
 
-# TODO: Аннотаций много где не хватает
 @pytest.mark.parametrize("patch_random", [0], indirect=True)
 async def test_confirm_propagates_confirm_error(
-    booking_repository,
-    stub_booking_confirmed_client,
-    patch_random,
+    booking_repository: SQLAlchemyBookingRepository,
+    stub_booking_confirmed_client: StubBookingConfirmClient,
+    patch_random: MagicMock,
 ) -> None:
     booking = make_booking()
     await booking_repository.add(booking)

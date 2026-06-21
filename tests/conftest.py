@@ -1,4 +1,8 @@
+from unittest.mock import MagicMock
+
 import pytest
+from pytest import FixtureRequest
+from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
@@ -23,5 +27,5 @@ def booking_repository(session: AsyncSession) -> SQLAlchemyBookingRepository:
 
 
 @pytest.fixture
-def patch_random(mocker, request):
+def patch_random(mocker: MockerFixture, request: FixtureRequest) -> MagicMock:
     return mocker.patch("adapters.stub_booking_confirmed_client.random.random", return_value=request.param)

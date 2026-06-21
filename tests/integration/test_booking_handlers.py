@@ -1,4 +1,9 @@
+from datetime import datetime
+from unittest.mock import MagicMock
+
 import pytest
+from httpx import AsyncClient
+from pytest_mock import MockerFixture
 
 from adapters.http.rate_limit import create_booking_rate_limiter
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
@@ -9,7 +14,7 @@ pytestmark = pytest.mark.integration
 
 
 async def test_get_booking_returns_booking(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
     booking = make_booking()
@@ -27,14 +32,14 @@ async def test_get_booking_returns_booking(
     }
 
 
-async def test_get_booking_returns_404_when_not_found(client) -> None:
+async def test_get_booking_returns_404_when_not_found(client: AsyncClient) -> None:
     response = await client.get("/bookings/999")
 
     assert response.status_code == 404
 
 
 async def test_list_bookings_filters_by_status_and_pagination(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
     pending = make_booking(name="pending", status=BookingStatus.PENDING)
@@ -64,7 +69,7 @@ async def test_list_bookings_filters_by_status_and_pagination(
 
 
 async def test_list_bookings_supports_pagination(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
     first = make_booking(name="first")
@@ -94,7 +99,7 @@ async def test_list_bookings_supports_pagination(
 
 
 async def test_cancel_booking_marks_pending_booking_as_failed(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
     booking = make_booking()
@@ -106,14 +111,14 @@ async def test_cancel_booking_marks_pending_booking_as_failed(
     assert await booking_repository.find_by() == [make_from(booking, status=BookingStatus.FAILED)]
 
 
-async def test_cancel_booking_returns_404_when_not_found(client) -> None:
+async def test_cancel_booking_returns_404_when_not_found(client: AsyncClient) -> None:
     response = await client.delete("/bookings/999")
 
     assert response.status_code == 404
 
 
 async def test_cancel_booking_returns_409_when_not_pending(
-    client,
+    client: AsyncClient,
     booking_repository: SQLAlchemyBookingRepository,
 ) -> None:
     booking = make_booking(status=BookingStatus.CONFIRMED)
@@ -125,10 +130,10 @@ async def test_cancel_booking_returns_409_when_not_pending(
 
 
 async def test_create_booking_rate_limit_returns_429(
-    client,
-    base_booking_payload,
-    confirm_booking_task_delay_mock,
-    mocker,
+    client: AsyncClient,
+    base_booking_payload: dict[str, str],
+    confirm_booking_task_delay_mock: MagicMock,
+    mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(create_booking_rate_limiter, "_max_requests", 0)
 
