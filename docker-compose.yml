@@ -32,6 +32,8 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+asyncpg://booking:booking@postgres:5432/booking
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
     command: alembic upgrade head
     restart: "no"
 

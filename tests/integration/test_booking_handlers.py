@@ -1,11 +1,9 @@
-from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
 from httpx import AsyncClient
 from pytest_mock import MockerFixture
 
-from adapters.http.rate_limit import create_booking_rate_limiter
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from domain.entities.booking import BookingStatus
 from tests.factories import make_booking, make_from
@@ -135,7 +133,7 @@ async def test_create_booking_rate_limit_returns_429(
     confirm_booking_task_delay_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
-    mocker.patch.object(create_booking_rate_limiter, "_max_requests", 0)
+    mocker.patch("adapters.http.rate_limit.MAX_REQUESTS", 0)
 
     response = await client.post("/bookings", json={**base_booking_payload, "name": "limited-overflow"})
 

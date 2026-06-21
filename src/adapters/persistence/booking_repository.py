@@ -49,7 +49,6 @@ class SQLAlchemyBookingRepository(BookingRepository):
         try:
             await self._session.commit()
         except IntegrityError as exc:
-            # TODO: Точно ли нужно явно делать rollback?
             await self._session.rollback()
             raise BookingAlreadyExist from exc
         booking.id = model.id

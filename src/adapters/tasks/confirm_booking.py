@@ -13,7 +13,6 @@ from domain.ports.task_manager import TaskManager
 
 
 async def _run_confirm(booking_id: int) -> None:
-    # TODO: Сделать, что бы сессия как то DI создавалась и закрывалась?
     async with session_factory() as session:
         await BookingServiceApp(
             SQLAlchemyBookingRepository(session),

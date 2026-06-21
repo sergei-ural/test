@@ -2,7 +2,6 @@ from celery import Celery
 
 from adapters.logging_config import configure_logging
 from adapters.settings import settings
-# TODO:Вызывается в двух местах, точно ли так нормально?
 configure_logging()
 
 celery_app = Celery("booking_app")

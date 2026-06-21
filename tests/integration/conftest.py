@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from adapters.http.app import create_app
-from adapters.http.rate_limit import create_booking_rate_limiter
+from adapters.http.rate_limit import _requests
 from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 
 
@@ -32,7 +32,7 @@ def confirm_booking_task_delay_mock(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture
 async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    create_booking_rate_limiter._requests.clear()
+    _requests.clear()
     app = create_app()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http_client:
         yield http_client

@@ -26,7 +26,7 @@ docker compose up --build
 
 ## Тесты
 
-Тесты читают настройки из `.env` (при отсутствии файла `make test` создаст его из `.env.example`):
+Тесты запускаются без Docker. Для pytest в `tests/conftest.py` используется SQLite in-memory; в Docker — PostgreSQL из `docker-compose.yml`.
 
 ```bash
 poetry install
