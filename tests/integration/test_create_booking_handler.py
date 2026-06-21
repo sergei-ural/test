@@ -11,27 +11,24 @@ pytestmark = pytest.mark.integration
 async def test_create_booking_returns_201_and_enqueues_confirm(
     client,
     booking_repository: SQLAlchemyBookingRepository,
-        base_booking_payload,
-    mocker,
+    base_booking_payload,
+    confirm_booking_task_delay_mock,
 ) -> None:
-    delay = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
-
     response = await client.post("/bookings", json=base_booking_payload)
 
     assert response.status_code == 201
     bookings = await booking_repository.find_by(name=base_booking_payload["name"])
     assert len(bookings) == 1
     assert response.json() == {"id": bookings[0].id}
-    delay.assert_called_once_with(bookings[0].id)
+    confirm_booking_task_delay_mock.assert_called_once_with(bookings[0].id)
 
 
 async def test_create_booking_succeeds_when_booking_already_exists(
     client,
     booking_repository: SQLAlchemyBookingRepository,
     base_booking_payload,
-    mocker,
+    confirm_booking_task_delay_mock,
 ) -> None:
-    delay = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
     existing = make_booking(
         datetime_=datetime.fromisoformat(base_booking_payload["datetime"]),
         name=base_booking_payload["name"],
@@ -43,7 +40,7 @@ async def test_create_booking_succeeds_when_booking_already_exists(
 
     assert response.status_code == 200
     assert response.json() == {"id": existing.id}
-    delay.assert_not_called()
+    confirm_booking_task_delay_mock.assert_not_called()
 
 
 async def test_create_booking_rejects_past_datetime(client) -> None:

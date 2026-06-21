@@ -110,12 +110,12 @@ async def test_cancel_booking_returns_409_when_not_pending(
 async def test_create_booking_rate_limit_returns_429(
     client,
     base_booking_payload,
+    confirm_booking_task_delay_mock,
     mocker,
 ) -> None:
-    confirm_booking_task_mock = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
     mocker.patch.object(create_booking_rate_limiter, "_max_requests", 0)
 
     response = await client.post("/bookings", json={**base_booking_payload, "name": "limited-overflow"})
 
     assert response.status_code == 429
-    confirm_booking_task_mock.assert_not_called()
+    confirm_booking_task_delay_mock.assert_not_called()

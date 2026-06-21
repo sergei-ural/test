@@ -10,13 +10,11 @@ from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 pytestmark = pytest.mark.integration
 
 
-# TODO: моки тасок нахывать именами а не delay
 async def test_create_booking_use_case_returns_id_for_new_booking(
     booking_repository,
     stub_booking_confirmed_client,
-    mocker,
+    confirm_booking_task_delay_mock,
 ) -> None:
-    delay = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
     use_case = CreateBookingUseCase(
         BookingServiceApp(booking_repository, stub_booking_confirmed_client, CeleryTaskManager()),
         booking_repository,
@@ -31,14 +29,13 @@ async def test_create_booking_use_case_returns_id_for_new_booking(
     assert result.created is True
     bookings = await booking_repository.find_by(name="name")
     assert result.id == bookings[0].id
-    delay.assert_called_once_with(result.id)
+    confirm_booking_task_delay_mock.assert_called_once_with(result.id)
 
 
 async def test_create_booking_use_case_returns_existing_id_without_enqueue(
     booking_repository,
-    mocker,
+    confirm_booking_task_delay_mock,
 ) -> None:
-    delay = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
     existing = make_booking()
     await booking_repository.add(existing)
     use_case = CreateBookingUseCase(
@@ -54,4 +51,4 @@ async def test_create_booking_use_case_returns_existing_id_without_enqueue(
 
     assert result.created is False
     assert result.id == existing.id
-    delay.assert_not_called()
+    confirm_booking_task_delay_mock.assert_not_called()

@@ -21,6 +21,11 @@ def stub_booking_confirmed_client() -> StubBookingConfirmClient:
 
 
 @pytest.fixture
+def confirm_booking_task_delay_mock(mocker):
+    return mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
+
+
+@pytest.fixture
 async def client(session):
     create_booking_rate_limiter._requests.clear()
     app = create_app()
