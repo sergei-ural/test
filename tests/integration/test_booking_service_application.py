@@ -2,7 +2,7 @@ import pytest
 
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.stub_booking_confirmed_client import StubBookingConfirmedClient
-from domain.application_services.booking import BookingServiceApplication
+from domain.application_services.booking import BookingServiceApp
 from domain.entities.booking import BookingStatus
 from domain.ports.booking_confirmed_client import ConfirmError, BookingConfirmedClient
 from domain.ports.booking_repository import BookingNotFound
@@ -21,19 +21,19 @@ async def test_confirm_calls_client_for_pending_booking(
     repository = SQLAlchemyBookingRepository(session)
     booking = make_booking()
     await repository.add(booking)
-    sut = BookingServiceApplication(repository, StubBookingConfirmedClient(), make_dummy(TaskManager))
+    sut = BookingServiceApp(repository, StubBookingConfirmedClient(), make_dummy(TaskManager))
 
     got = await sut.confirm(booking.id)
 
     assert got is None
-    assert await repository.find_by(id=booking.id) == [make_from(booking, status=BookingStatus.CONFIRMED)]
+    assert await repository.find_by() == [make_from(booking, status=BookingStatus.CONFIRMED)]
 
 
 async def test_confirm_raises_when_pending_booking_not_found(
     session,
 ) -> None:
     with pytest.raises(BookingNotFound):
-        await BookingServiceApplication(
+        await BookingServiceApp(
             SQLAlchemyBookingRepository(session),
             make_dummy(BookingConfirmedClient),
             make_dummy(TaskManager),
@@ -50,10 +50,10 @@ async def test_confirm_propagates_confirm_error(
     await repository.add(booking)
 
     with pytest.raises(ConfirmError):
-        await BookingServiceApplication(
+        await BookingServiceApp(
             repository,
             StubBookingConfirmedClient(),
             make_dummy(TaskManager),
         ).confirm(booking.id)
 
-    assert await repository.find_by(id=booking.id, status=BookingStatus.PENDING) == [booking]
+    assert await repository.find_by() == [booking]

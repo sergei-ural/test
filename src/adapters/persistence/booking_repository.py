@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +9,7 @@ from domain.ports.booking_repository import (
     BookingAlreadyExist,
     BookingNotFound,
     BookingRepository,
+    FindBookingMoreThanOne,
 )
 from adapters.persistence.models import BookingModel
 
@@ -51,9 +54,32 @@ class SQLAlchemyBookingRepository(BookingRepository):
         model.status = booking.status
         await self._session.commit()
 
+    async def get_by(
+        self,
+        id: int | None = None,
+        datetime_: datetime | None = None,
+        name: str | None = None,
+        service_type: str | None = None,
+        status: BookingStatus | None = None,
+    ) -> Booking:
+        bookings = await self.find_by(
+            id=id,
+            datetime_=datetime_,
+            name=name,
+            service_type=service_type,
+            status=status,
+            limit=2,
+        )
+        if not bookings:
+            raise BookingNotFound()
+        if len(bookings) > 1:
+            raise FindBookingMoreThanOne
+        return bookings[0]
+
     async def find_by(
         self,
         id: int | None = None,
+        datetime_: datetime | None = None,
         name: str | None = None,
         service_type: str | None = None,
         status: BookingStatus | None = None,
@@ -61,16 +87,15 @@ class SQLAlchemyBookingRepository(BookingRepository):
         limit: int = 20,
     ) -> list[Booking]:
         query = select(BookingModel)
-
-        # TODO: Завернуть в обработку циклом списка параметров?
-        if id is not None:
-            query = query.where(BookingModel.id == id)
-        if name is not None:
-            query = query.where(BookingModel.name == name)
-        if service_type is not None:
-            query = query.where(BookingModel.service_type == service_type)
-        if status is not None:
-            query = query.where(BookingModel.status == status)
+        for column, value in (
+            (BookingModel.id, id),
+            (BookingModel.datetime, datetime_),
+            (BookingModel.name, name),
+            (BookingModel.service_type, service_type),
+            (BookingModel.status, status),
+        ):
+            if value is not None:
+                query = query.where(column == value)
 
         query = query.order_by(BookingModel.id).offset(offset).limit(limit)
         return [

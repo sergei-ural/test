@@ -18,6 +18,10 @@ class CreateBookingRequest(BaseModel):
         return value
 
 
+class CreateBookingResponse(BaseModel):
+    id: int
+
+
 class BookingResponse(BaseModel):
     id: int
     datetime: datetime

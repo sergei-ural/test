@@ -2,11 +2,11 @@ from datetime import datetime
 
 from domain.entities.booking import Booking, BookingStatus
 from domain.ports.booking_confirmed_client import BookingConfirmedClient
-from domain.ports.booking_repository import BookingNotFound, BookingRepository
+from domain.ports.booking_repository import BookingNotPending, BookingRepository
 from domain.ports.task_manager import TaskManager
 
 
-class BookingServiceApplication:
+class BookingServiceApp:
     def __init__(
         self,
         repository: BookingRepository,
@@ -15,29 +15,27 @@ class BookingServiceApplication:
     ) -> None:
         self._booking_repository = repository
         self._booking_confirmed_client = client
-        self._task_manager = task_manager
+        self._booking_task_manager = task_manager
 
-    async def create(
-        self,
-        datetime_: datetime,
-        name: str,
-        service_type: str,
-    ) -> Booking:
-        booking = Booking.new(
-            datetime_=datetime_,
-            name=name,
-            service_type=service_type,
-        )
+    async def create(self, datetime_: datetime, name: str, service_type: str) -> Booking:
+        booking = Booking.new(datetime_=datetime_, name=name, service_type=service_type)
         await self._booking_repository.add(booking)
-        self._task_manager.confirm(booking.id)
+        self._booking_task_manager.confirm(booking.id)
         return booking
 
+    async def cancel(self, booking_id: int) -> None:
+        booking = await self._booking_repository.get_by(id=booking_id)
+        if booking.status != BookingStatus.PENDING:
+            raise BookingNotPending()
+        await self._booking_repository.remove(booking)
+
     async def confirm(self, booking_id: int) -> None:
-        # TODO: Сделать get?
-        bookings = await self._booking_repository.find_by(id=booking_id, status=BookingStatus.PENDING)
-        if not bookings:
-            raise BookingNotFound
-        booking = bookings[0]
+        booking = await self._booking_repository.get_by(id=booking_id, status=BookingStatus.PENDING)
         await self._booking_confirmed_client.confirm(booking)
         booking.status = BookingStatus.CONFIRMED
+        await self._booking_repository.save(booking)
+
+    async def fail(self, booking_id: int) -> None:
+        booking = await self._booking_repository.get_by(id=booking_id, status=BookingStatus.PENDING)
+        booking.status = BookingStatus.FAILED
         await self._booking_repository.save(booking)

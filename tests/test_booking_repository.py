@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.persistence.models import BookingModel
 from domain.entities.booking import Booking, BookingStatus
-from domain.ports.booking_repository import BookingAlreadyExist, BookingNotFound
+from domain.ports.booking_repository import BookingAlreadyExist, BookingNotFound, FindBookingMoreThanOne
 from tests.factories import make_booking
 
 
@@ -52,10 +52,34 @@ async def test_remove_not_found_raises(booking_repository: SQLAlchemyBookingRepo
     assert await get_all_bookings(session) == []
 
 
+async def test_get_by_existing(booking_repository: SQLAlchemyBookingRepository) -> None:
+    booking = make_booking()
+    await booking_repository.add(booking)
+
+    got = await booking_repository.get_by(id=booking.id)
+
+    assert got == booking
+
+
+async def test_get_by_not_found_raises(booking_repository: SQLAlchemyBookingRepository) -> None:
+    with pytest.raises(BookingNotFound):
+        await booking_repository.get_by(id=999)
+
+
+async def test_get_by_more_than_one_raises(booking_repository: SQLAlchemyBookingRepository) -> None:
+    booking1 = make_booking(name="same", service_type="service_type1")
+    booking2 = make_booking(name="same", service_type="service_type2")
+    await booking_repository.add(booking1)
+    await booking_repository.add(booking2)
+
+    with pytest.raises(FindBookingMoreThanOne):
+        await booking_repository.get_by(name="same")
+
+
 async def test_find_all(booking_repository: SQLAlchemyBookingRepository) -> None:
     booking1 = make_booking(name="name1", status=BookingStatus.PENDING)
     booking2 = make_booking(name="name2", status=BookingStatus.CONFIRMED)
-    booking3 = make_booking(name="name3", status=BookingStatus.CANCELLED)
+    booking3 = make_booking(name="name3", status=BookingStatus.FAILED)
     await booking_repository.add(booking1)
     await booking_repository.add(booking2)
     await booking_repository.add(booking3)

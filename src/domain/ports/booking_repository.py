@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from domain.entities.booking import Booking, BookingStatus
 
@@ -8,6 +9,14 @@ class BookingAlreadyExist(Exception):
 
 
 class BookingNotFound(Exception):
+    pass
+
+
+class FindBookingMoreThanOne(Exception):
+    pass
+
+
+class BookingNotPending(Exception):
     pass
 
 
@@ -25,9 +34,21 @@ class BookingRepository(ABC):
         ...
 
     @abstractmethod
+    async def get_by(
+        self,
+        id: int | None = None,
+        datetime_: datetime | None = None,
+        name: str | None = None,
+        service_type: str | None = None,
+        status: BookingStatus | None = None,
+    ) -> Booking:
+        ...
+
+    @abstractmethod
     async def find_by(
         self,
         id: int | None = None,
+        datetime_: datetime | None = None,
         name: str | None = None,
         service_type: str | None = None,
         status: BookingStatus | None = None,

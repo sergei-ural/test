@@ -19,6 +19,7 @@ psycopg2-binary = "^2.9"
 celery = { version = "^5.4", extras = ["redis"] }
 fastapi = "^0.115"
 uvicorn = { version = "^0.34", extras = ["standard"] }
+tenacity = "^9.1.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"
