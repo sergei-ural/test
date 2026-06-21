@@ -24,6 +24,7 @@ class BookingRepository(ABC):
     async def find_by(
         self,
         *,
+        id: int | None = None,
         name: str | None = None,
         service_type: str | None = None,
         status: BookingStatus | None = None,

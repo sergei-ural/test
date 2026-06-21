@@ -14,6 +14,9 @@ sqlalchemy = "^2.0"
 alembic = "^1.14"
 pydantic-settings = "^2.7"
 aiosqlite = "^0.21"
+asyncpg = "^0.30"
+psycopg2-binary = "^2.9"
+celery = { version = "^5.4", extras = ["redis"] }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"

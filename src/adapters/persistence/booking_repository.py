@@ -41,6 +41,7 @@ class SQLAlchemyBookingRepository(BookingRepository):
     async def find_by(
         self,
         *,
+        id: int | None = None,
         name: str | None = None,
         service_type: str | None = None,
         status: BookingStatus | None = None,
@@ -49,6 +50,9 @@ class SQLAlchemyBookingRepository(BookingRepository):
     ) -> list[Booking]:
         query = select(BookingModel)
 
+        # TODO: Завернуть в обработку циклом списка параметров?
+        if id is not None:
+            query = query.where(BookingModel.id == id)
         if name is not None:
             query = query.where(BookingModel.name == name)
         if service_type is not None:
