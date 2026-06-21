@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from domain.application_services.booking import BookingServiceApp
-from domain.ports.booking_repository import BookingAlreadyExist, BookingNotFound, BookingRepository
+from domain.ports.booking_repository import BookingAlreadyExist, BookingRepository
 
 
 @dataclass(frozen=True)

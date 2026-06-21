@@ -7,4 +7,4 @@ test:
 	poetry run pytest
 
 lint:
-	poetry run python -m compileall src tests
+	poetry run ruff check src tests
