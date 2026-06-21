@@ -13,7 +13,7 @@ class BookingNotFound(Exception):
 
 class BookingRepository(ABC):
     @abstractmethod
-    async def add(self, booking: Booking) -> Booking:
+    async def add(self, booking: Booking) -> None:
         ...
 
     @abstractmethod
@@ -27,7 +27,6 @@ class BookingRepository(ABC):
     @abstractmethod
     async def find_by(
         self,
-        *,
         id: int | None = None,
         name: str | None = None,
         service_type: str | None = None,

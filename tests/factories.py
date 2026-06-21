@@ -14,7 +14,6 @@ def make_from[Entity](obj: Entity, **kwargs) -> Entity:
 
 
 def make_booking(
-    *,
     id: int | None = None,
     name: str = "name",
     service_type: str = "service_type",

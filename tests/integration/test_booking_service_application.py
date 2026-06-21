@@ -6,6 +6,7 @@ from domain.application_services.booking import BookingServiceApplication
 from domain.entities.booking import BookingStatus
 from domain.ports.booking_confirmed_client import ConfirmError, BookingConfirmedClient
 from domain.ports.booking_repository import BookingNotFound
+from domain.ports.task_manager import TaskManager
 from tests.dummy import make_dummy
 from tests.factories import make_booking, make_from
 
@@ -18,8 +19,9 @@ async def test_confirm_calls_client_for_pending_booking(
     patch_random,
 ) -> None:
     repository = SQLAlchemyBookingRepository(session)
-    booking = await repository.add(make_booking())
-    sut = BookingServiceApplication(repository, StubBookingConfirmedClient())
+    booking = make_booking()
+    await repository.add(booking)
+    sut = BookingServiceApplication(repository, StubBookingConfirmedClient(), make_dummy(TaskManager))
 
     got = await sut.confirm(booking.id)
 
@@ -34,6 +36,7 @@ async def test_confirm_raises_when_pending_booking_not_found(
         await BookingServiceApplication(
             SQLAlchemyBookingRepository(session),
             make_dummy(BookingConfirmedClient),
+            make_dummy(TaskManager),
         ).confirm(999)
 
 
@@ -43,9 +46,14 @@ async def test_confirm_propagates_confirm_error(
     patch_random,
 ) -> None:
     repository = SQLAlchemyBookingRepository(session)
-    booking = await repository.add(make_booking())
+    booking = make_booking()
+    await repository.add(booking)
 
     with pytest.raises(ConfirmError):
-        await BookingServiceApplication(repository, StubBookingConfirmedClient()).confirm(booking.id)
+        await BookingServiceApplication(
+            repository,
+            StubBookingConfirmedClient(),
+            make_dummy(TaskManager),
+        ).confirm(booking.id)
 
     assert await repository.find_by(id=booking.id, status=BookingStatus.PENDING) == [booking]

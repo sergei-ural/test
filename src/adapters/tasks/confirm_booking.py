@@ -7,6 +7,7 @@ from adapters.stub_booking_confirmed_client import StubBookingConfirmedClient
 from domain.application_services.booking import BookingServiceApplication
 from domain.ports.booking_confirmed_client import ConfirmError
 from domain.ports.booking_repository import BookingNotFound
+from domain.ports.task_manager import TaskManager
 
 
 async def _run_confirm(booking_id: int) -> None:
@@ -15,6 +16,7 @@ async def _run_confirm(booking_id: int) -> None:
         await BookingServiceApplication(
             SQLAlchemyBookingRepository(session),
             StubBookingConfirmedClient(),
+            CeleryTaskManager(),
         ).confirm(booking_id)
 
 
@@ -28,3 +30,8 @@ def confirm_booking_task(self, booking_id: int) -> None:
         return None
     except ConfirmError as exc:
         raise self.retry(exc=exc, countdown=10) from exc
+
+
+class CeleryTaskManager(TaskManager):
+    def confirm(self, booking_id: int) -> None:
+        confirm_booking_task.delay(booking_id)

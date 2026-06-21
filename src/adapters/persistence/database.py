@@ -6,7 +6,6 @@ from adapters.settings import settings
 
 def create_db_engine(
     database_url: str,
-    *,
     poolclass: type[Pool] | None = None,
 ) -> AsyncEngine:
     kwargs: dict = {}

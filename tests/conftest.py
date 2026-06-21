@@ -10,12 +10,11 @@ from adapters.settings import settings
 
 # TODO: Разделить на фикстуру с движком и сессию.
 @pytest.fixture
-async def session(mocker) -> AsyncSession:
+async def session() -> AsyncSession:
     engine = create_db_engine(settings.database_url)
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
-    mocker.patch("adapters.persistence.database.session_factory", session_factory)
     async with session_factory() as db_session:
         await db_session.execute(delete(BookingModel))
         await db_session.commit()

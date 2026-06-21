@@ -18,7 +18,8 @@ async def test_confirm_booking_task_confirms_pending_booking(
     patch_random,
 ) -> None:
     repository = SQLAlchemyBookingRepository(session)
-    booking = await repository.add(make_booking())
+    booking = make_booking()
+    await repository.add(booking)
 
     result: EagerResult = await asyncio.to_thread(confirm_booking_task.apply, args=[booking.id])
 
@@ -42,7 +43,8 @@ async def test_confirm_booking_task_retries_on_confirm_error(
     from adapters.celery_app import celery_app
 
     celery_app.conf.task_eager_propagates = False
-    booking = await SQLAlchemyBookingRepository(session).add(make_booking())
+    booking = make_booking()
+    await SQLAlchemyBookingRepository(session).add(booking)
 
     with pytest.raises(ConfirmError):
         await asyncio.to_thread(lambda: confirm_booking_task.apply(args=[booking.id]).get())
@@ -54,7 +56,8 @@ async def test_confirm_booking_task_completes_when_booking_is_not_pending(
     patch_random,
 ) -> None:
     repository = SQLAlchemyBookingRepository(session)
-    booking = await repository.add(make_booking(status=BookingStatus.CONFIRMED))
+    booking = make_booking(status=BookingStatus.CONFIRMED)
+    await repository.add(booking)
 
     result: EagerResult = await asyncio.to_thread(confirm_booking_task.apply, args=[booking.id])
 

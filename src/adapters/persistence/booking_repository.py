@@ -15,7 +15,7 @@ class SQLAlchemyBookingRepository(BookingRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def add(self, booking: Booking) -> Booking:
+    async def add(self, booking: Booking) -> None:
         model = BookingModel(
             datetime=booking.datetime,
             name=booking.name,
@@ -30,7 +30,6 @@ class SQLAlchemyBookingRepository(BookingRepository):
             await self._session.rollback()
             raise BookingAlreadyExist from exc
         booking.id = model.id
-        return booking
 
     async def remove(self, booking: Booking) -> None:
         result = await self._session.execute(delete(BookingModel).where(BookingModel.id == booking.id))
@@ -54,7 +53,6 @@ class SQLAlchemyBookingRepository(BookingRepository):
 
     async def find_by(
         self,
-        *,
         id: int | None = None,
         name: str | None = None,
         service_type: str | None = None,

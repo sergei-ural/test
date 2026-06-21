@@ -37,7 +37,8 @@ async def test_add_duplicate_raises(booking_repository: SQLAlchemyBookingReposit
 
 
 async def test_remove_existing(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
-    booking = await booking_repository.add(make_booking())
+    booking = make_booking()
+    await booking_repository.add(booking)
 
     await booking_repository.remove(booking)
 
