@@ -21,6 +21,10 @@ class BookingRepository(ABC):
         ...
 
     @abstractmethod
+    async def save(self, booking: Booking) -> None:
+        ...
+
+    @abstractmethod
     async def find_by(
         self,
         *,

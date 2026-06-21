@@ -38,6 +38,20 @@ class SQLAlchemyBookingRepository(BookingRepository):
             raise BookingNotFound
         await self._session.commit()
 
+    async def save(self, booking: Booking) -> None:
+        if booking.id is None:
+            raise BookingNotFound
+
+        model = await self._session.get(BookingModel, booking.id)
+        if model is None:
+            raise BookingNotFound
+
+        model.datetime = booking.datetime
+        model.name = booking.name
+        model.service_type = booking.service_type
+        model.status = booking.status
+        await self._session.commit()
+
     async def find_by(
         self,
         *,

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,22 +6,7 @@ from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.persistence.models import BookingModel
 from domain.entities.booking import Booking, BookingStatus
 from domain.ports.booking_repository import BookingAlreadyExist, BookingNotFound
-
-
-def make_booking(
-    id: int | None = None,
-    name: str = "name",
-    service_type: str = "service_type",
-    status: BookingStatus = BookingStatus.PENDING,
-    datetime_: datetime | None = None,
-) -> Booking:
-    return Booking(
-        id=id,
-        datetime=datetime_ or datetime(2026, 6, 21, 10, 0),
-        name=name,
-        service_type=service_type,
-        status=status,
-    )
+from tests.factories import make_booking
 
 
 async def get_all_bookings(session: AsyncSession) -> list[Booking]:

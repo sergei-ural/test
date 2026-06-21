@@ -21,11 +21,15 @@ celery = { version = "^5.4", extras = ["redis"] }
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"
 pytest-asyncio = "^0.25"
+pytest-mock = "^3.15.1"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: tests that require docker compose services",
+]
 
 [build-system]
 requires = ["poetry-core"]
