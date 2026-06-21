@@ -1,23 +1,25 @@
 import pytest
 
-from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
-from adapters.stub_booking_confirmed_client import StubBookingConfirmedClient
 from adapters.tasks.confirm_booking import CeleryTaskManager
 from domain.application_services.booking import BookingServiceApp
 from domain.use_cases.create_booking import CreateBookingUseCase
 from tests.dummy import make_dummy
 from tests.factories import make_booking
+from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 
 pytestmark = pytest.mark.integration
 
 
 # TODO: моки тасок нахывать именами а не delay
-async def test_create_booking_use_case_returns_id_for_new_booking(session, mocker) -> None:
+async def test_create_booking_use_case_returns_id_for_new_booking(
+    booking_repository,
+    stub_booking_confirmed_client,
+    mocker,
+) -> None:
     delay = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
-    repository = SQLAlchemyBookingRepository(session)
     use_case = CreateBookingUseCase(
-        BookingServiceApp(repository, StubBookingConfirmedClient(), CeleryTaskManager()),
-        repository,
+        BookingServiceApp(booking_repository, stub_booking_confirmed_client, CeleryTaskManager()),
+        booking_repository,
     )
 
     result = await use_case.execute(
@@ -27,19 +29,21 @@ async def test_create_booking_use_case_returns_id_for_new_booking(session, mocke
     )
 
     assert result.created is True
-    bookings = await repository.find_by(name="name")
+    bookings = await booking_repository.find_by(name="name")
     assert result.id == bookings[0].id
     delay.assert_called_once_with(result.id)
 
 
-async def test_create_booking_use_case_returns_existing_id_without_enqueue(session, mocker) -> None:
+async def test_create_booking_use_case_returns_existing_id_without_enqueue(
+    booking_repository,
+    mocker,
+) -> None:
     delay = mocker.patch("adapters.tasks.confirm_booking.confirm_booking_task.delay")
-    repository = SQLAlchemyBookingRepository(session)
     existing = make_booking()
-    await repository.add(existing)
+    await booking_repository.add(existing)
     use_case = CreateBookingUseCase(
-        BookingServiceApp(repository, make_dummy(StubBookingConfirmedClient), CeleryTaskManager()),
-        repository,
+        BookingServiceApp(booking_repository, make_dummy(StubBookingConfirmClient), CeleryTaskManager()),
+        booking_repository,
     )
 
     result = await use_case.execute(

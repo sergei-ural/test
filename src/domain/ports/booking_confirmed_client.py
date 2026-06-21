@@ -7,7 +7,7 @@ class ConfirmError(Exception):
     pass
 
 
-class BookingConfirmedClient(ABC):
+class BookingConfirmClient(ABC):
     @abstractmethod
     async def confirm(self, booking: Booking) -> None:
         ...

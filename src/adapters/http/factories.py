@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from adapters.tasks.confirm_booking import CeleryTaskManager
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.persistence.database import session_factory
-from adapters.stub_booking_confirmed_client import StubBookingConfirmedClient
+from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 from domain.application_services.booking import BookingServiceApp
 from domain.ports.booking_repository import BookingRepository
 from domain.use_cases.create_booking import CreateBookingUseCase
@@ -28,7 +28,7 @@ async def get_booking_service(
 ) -> BookingServiceApp:
     return BookingServiceApp(
         SQLAlchemyBookingRepository(session),
-        StubBookingConfirmedClient(),
+        StubBookingConfirmClient(),
         CeleryTaskManager(),
     )
 
@@ -40,7 +40,7 @@ async def get_create_booking_use_case(
     return CreateBookingUseCase(
         booking_service=BookingServiceApp(
             repository,
-            StubBookingConfirmedClient(),
+            StubBookingConfirmClient(),
             CeleryTaskManager(),
         ),
         repository=repository,

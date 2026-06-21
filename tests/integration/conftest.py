@@ -3,6 +3,7 @@ from httpx import ASGITransport, AsyncClient
 
 from adapters.http.app import create_app
 from adapters.http.rate_limit import create_booking_rate_limiter
+from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 
 
 @pytest.fixture
@@ -12,6 +13,11 @@ def base_booking_payload() -> dict[str, str]:
         "name": "name",
         "service_type": "service_type",
     }
+
+
+@pytest.fixture
+def stub_booking_confirmed_client() -> StubBookingConfirmClient:
+    return StubBookingConfirmClient()
 
 
 @pytest.fixture

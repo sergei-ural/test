@@ -1,10 +1,8 @@
 import pytest
 
-from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
-from adapters.stub_booking_confirmed_client import StubBookingConfirmedClient
 from domain.application_services.booking import BookingServiceApp
 from domain.entities.booking import BookingStatus
-from domain.ports.booking_confirmed_client import ConfirmError, BookingConfirmedClient
+from domain.ports.booking_confirmed_client import ConfirmError, BookingConfirmClient
 from domain.ports.booking_repository import BookingNotFound
 from domain.ports.task_manager import TaskManager
 from tests.dummy import make_dummy
@@ -15,45 +13,46 @@ pytestmark = pytest.mark.integration
 
 @pytest.mark.parametrize("patch_random", [1], indirect=True)
 async def test_confirm_calls_client_for_pending_booking(
-    session,
+    booking_repository,
+    stub_booking_confirmed_client,
     patch_random,
 ) -> None:
-    repository = SQLAlchemyBookingRepository(session)
     booking = make_booking()
-    await repository.add(booking)
-    sut = BookingServiceApp(repository, StubBookingConfirmedClient(), make_dummy(TaskManager))
+    await booking_repository.add(booking)
+    sut = BookingServiceApp(booking_repository, stub_booking_confirmed_client, make_dummy(TaskManager))
 
     got = await sut.confirm(booking.id)
 
     assert got is None
-    assert await repository.find_by() == [make_from(booking, status=BookingStatus.CONFIRMED)]
+    assert await booking_repository.find_by() == [make_from(booking, status=BookingStatus.CONFIRMED)]
 
 
 async def test_confirm_raises_when_pending_booking_not_found(
-    session,
+    booking_repository,
 ) -> None:
     with pytest.raises(BookingNotFound):
         await BookingServiceApp(
-            SQLAlchemyBookingRepository(session),
-            make_dummy(BookingConfirmedClient),
-            make_dummy(TaskManager),
+            booking_repository=booking_repository,
+            booking_confirm_client=make_dummy(BookingConfirmClient),
+            task_manager=make_dummy(TaskManager),
         ).confirm(999)
 
 
+# TODO: Аннотаций много где не хватает
 @pytest.mark.parametrize("patch_random", [0], indirect=True)
 async def test_confirm_propagates_confirm_error(
-    session,
+    booking_repository,
+    stub_booking_confirmed_client,
     patch_random,
 ) -> None:
-    repository = SQLAlchemyBookingRepository(session)
     booking = make_booking()
-    await repository.add(booking)
+    await booking_repository.add(booking)
 
     with pytest.raises(ConfirmError):
         await BookingServiceApp(
-            repository,
-            StubBookingConfirmedClient(),
-            make_dummy(TaskManager),
+            booking_repository=booking_repository,
+            booking_confirm_client=stub_booking_confirmed_client,
+            task_manager=make_dummy(TaskManager),
         ).confirm(booking.id)
 
-    assert await repository.find_by() == [booking]
+    assert await booking_repository.find_by() == [booking]

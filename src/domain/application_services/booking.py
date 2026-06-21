@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from domain.entities.booking import Booking, BookingStatus
-from domain.ports.booking_confirmed_client import BookingConfirmedClient
+from domain.ports.booking_confirmed_client import BookingConfirmClient
 from domain.ports.booking_repository import BookingNotPending, BookingRepository
 from domain.ports.task_manager import TaskManager
 
@@ -9,12 +9,12 @@ from domain.ports.task_manager import TaskManager
 class BookingServiceApp:
     def __init__(
         self,
-        repository: BookingRepository,
-        client: BookingConfirmedClient,
+        booking_repository: BookingRepository,
+        booking_confirm_client: BookingConfirmClient,
         task_manager: TaskManager,
     ) -> None:
-        self._booking_repository = repository
-        self._booking_confirmed_client = client
+        self._booking_repository = booking_repository
+        self._booking_confirmed_client = booking_confirm_client
         self._booking_task_manager = task_manager
 
     async def create(self, datetime_: datetime, name: str, service_type: str) -> Booking:

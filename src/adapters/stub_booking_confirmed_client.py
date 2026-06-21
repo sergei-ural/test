@@ -2,12 +2,12 @@ import logging
 import random
 
 from domain.entities.booking import Booking
-from domain.ports.booking_confirmed_client import BookingConfirmedClient, ConfirmError
+from domain.ports.booking_confirmed_client import BookingConfirmClient, ConfirmError
 
 logger = logging.getLogger(__name__)
 
 
-class StubBookingConfirmedClient(BookingConfirmedClient):
+class StubBookingConfirmClient(BookingConfirmClient):
     async def confirm(self, booking: Booking) -> None:
         if random.random() < 0.15:
             raise ConfirmError()

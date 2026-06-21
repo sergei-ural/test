@@ -5,7 +5,7 @@ from tenacity import retry, retry_if_exception_type, wait_exponential
 from adapters.celery_app import celery_app
 from adapters.persistence.booking_repository import SQLAlchemyBookingRepository
 from adapters.persistence.database import session_factory
-from adapters.stub_booking_confirmed_client import StubBookingConfirmedClient
+from adapters.stub_booking_confirmed_client import StubBookingConfirmClient
 from domain.application_services.booking import BookingServiceApp
 from domain.ports.booking_confirmed_client import ConfirmError
 from domain.ports.booking_repository import BookingNotFound
@@ -17,7 +17,7 @@ async def _run_confirm(booking_id: int) -> None:
     async with session_factory() as session:
         await BookingServiceApp(
             SQLAlchemyBookingRepository(session),
-            StubBookingConfirmedClient(),
+            StubBookingConfirmClient(),
             CeleryTaskManager(),
         ).confirm(booking_id)
 
