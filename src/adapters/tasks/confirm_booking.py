@@ -29,7 +29,7 @@ def confirm_booking_task(booking_id: int) -> None:
         asyncio.run(_run_confirm(booking_id))
     except BookingNotFound:
         # Тут в будущем можно положить отправку в sentry или что-то ещё,
-        # но ретраить или падать, смысла нет.
+        # но ретраить или падать, смысла сейчас нет.
         raise
 
 

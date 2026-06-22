@@ -45,33 +45,36 @@ class SQLAlchemyBookingRepository(BookingRepository):
             service_type=booking.service_type,
             status=booking.status,
         )
-        self._session.add(model)
-        try:
-            await self._session.commit()
-        except IntegrityError as exc:
-            await self._session.rollback()
-            raise BookingAlreadyExist from exc
-        booking.id = model.id
+        async with self._session as session:
+            session.add(model)
+            try:
+                await session.commit()
+            except IntegrityError as exc:
+                raise BookingAlreadyExist from exc
+            booking.id = model.id
 
     async def remove(self, booking: Booking) -> None:
-        result = await self._session.execute(delete(BookingModel).where(BookingModel.id == booking.id))
-        if result.rowcount == 0:
-            raise BookingNotFound
-        await self._session.commit()
+        async with self._session as session:
+            result = await session.execute(delete(BookingModel).where(BookingModel.id == booking.id))
+            if result.rowcount == 0:
+                raise BookingNotFound
+            await session.commit()
 
+    # TODO: Сделать через update а не два запроса
     async def save(self, booking: Booking) -> None:
         if booking.id is None:
-            raise BookingNotFound
+            raise BookingNotFound()
 
-        model = await self._session.get(BookingModel, booking.id)
-        if model is None:
-            raise BookingNotFound
+        async with self._session as session:
+            model = await session.get(BookingModel, booking.id)
+            if model is None:
+                raise BookingNotFound()
 
-        model.datetime = booking.datetime
-        model.name = booking.name
-        model.service_type = booking.service_type
-        model.status = booking.status
-        await self._session.commit()
+            model.datetime = booking.datetime
+            model.name = booking.name
+            model.service_type = booking.service_type
+            model.status = booking.status
+            await session.commit()
 
     async def get_by(
         self,
@@ -114,16 +117,17 @@ class SQLAlchemyBookingRepository(BookingRepository):
             status=status,
         )
         query = query.order_by(BookingModel.id).offset(offset).limit(limit)
-        return [
-            Booking(
-                id=model.id,
-                datetime=model.datetime,
-                name=model.name,
-                service_type=model.service_type,
-                status=model.status,
-            )
-            for model in (await self._session.scalars(query)).all()
-        ]
+        async with self._session as session:
+            return [
+                Booking(
+                    id=model.id,
+                    datetime=model.datetime,
+                    name=model.name,
+                    service_type=model.service_type,
+                    status=model.status,
+                )
+                for model in (await session.scalars(query)).all()
+            ]
 
     async def count_by(
         self,
