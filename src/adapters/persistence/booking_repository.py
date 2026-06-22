@@ -18,26 +18,6 @@ class SQLAlchemyBookingRepository(BookingRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    def _apply_filters(
-        self,
-        query,
-        id: int | None = None,
-        datetime_: datetime | None = None,
-        name: str | None = None,
-        service_type: str | None = None,
-        status: BookingStatus | None = None,
-    ):
-        for column, value in (
-            (BookingModel.id, id),
-            (BookingModel.datetime, datetime_),
-            (BookingModel.name, name),
-            (BookingModel.service_type, service_type),
-            (BookingModel.status, status),
-        ):
-            if value is not None:
-                query = query.where(column == value)
-        return query
-
     async def add(self, booking: Booking) -> None:
         model = BookingModel(
             datetime=booking.datetime,
@@ -53,14 +33,7 @@ class SQLAlchemyBookingRepository(BookingRepository):
                 raise BookingAlreadyExist from exc
             booking.id = model.id
 
-    async def remove(self, booking: Booking) -> None:
-        async with self._session as session:
-            result = await session.execute(delete(BookingModel).where(BookingModel.id == booking.id))
-            if result.rowcount == 0:
-                raise BookingNotFound
-            await session.commit()
-
-    async def save(self, booking: Booking) -> None:
+    async def update(self, booking: Booking) -> None:
         async with self._session as session:
             result = await session.execute(
                 update(BookingModel)
@@ -146,3 +119,23 @@ class SQLAlchemyBookingRepository(BookingRepository):
             status=status,
         )
         return await self._session.scalar(query) or 0
+
+    def _apply_filters(
+        self,
+        query,
+        id: int | None = None,
+        datetime_: datetime | None = None,
+        name: str | None = None,
+        service_type: str | None = None,
+        status: BookingStatus | None = None,
+    ):
+        for column, value in (
+            (BookingModel.id, id),
+            (BookingModel.datetime, datetime_),
+            (BookingModel.name, name),
+            (BookingModel.service_type, service_type),
+            (BookingModel.status, status),
+        ):
+            if value is not None:
+                query = query.where(column == value)
+        return query

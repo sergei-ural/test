@@ -36,35 +36,19 @@ async def test_add_duplicate_raises(booking_repository: SQLAlchemyBookingReposit
     assert await get_all_bookings(session) == [make_booking(id=booking.id)]
 
 
-async def test_remove_existing(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
-    booking = make_booking()
-    await booking_repository.add(booking)
-
-    await booking_repository.remove(booking)
-
-    assert await get_all_bookings(session) == []
-
-
-async def test_remove_not_found_raises(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
-    with pytest.raises(BookingNotFound):
-        await booking_repository.remove(make_booking(id=999))
-
-    assert await get_all_bookings(session) == []
-
-
-async def test_save_updates_existing(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
+async def test_update_updates_existing(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
     booking = make_booking()
     await booking_repository.add(booking)
 
     updated = make_from(booking, name="updated", status=BookingStatus.CONFIRMED)
-    await booking_repository.save(updated)
+    await booking_repository.update(updated)
 
     assert await get_all_bookings(session) == [updated]
 
 
-async def test_save_not_found_raises(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
+async def test_update_not_found_raises(booking_repository: SQLAlchemyBookingRepository, session: AsyncSession) -> None:
     with pytest.raises(BookingNotFound):
-        await booking_repository.save(make_booking(id=999))
+        await booking_repository.update(make_booking(id=999))
 
     assert await get_all_bookings(session) == []
 

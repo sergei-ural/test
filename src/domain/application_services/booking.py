@@ -28,10 +28,10 @@ class BookingServiceApp:
         if booking.status != BookingStatus.PENDING:
             raise BookingNotPending()
         booking.status = BookingStatus.FAILED
-        await self._booking_repository.save(booking)
+        await self._booking_repository.update(booking)
 
     async def confirm(self, booking_id: int) -> None:
         booking = await self._booking_repository.get_by(id=booking_id, status=BookingStatus.PENDING)
         await self._booking_confirmed_client.confirm(booking)
         booking.status = BookingStatus.CONFIRMED
-        await self._booking_repository.save(booking)
+        await self._booking_repository.update(booking)

@@ -26,11 +26,7 @@ class BookingRepository(ABC):
         ...
 
     @abstractmethod
-    async def remove(self, booking: Booking) -> None:
-        ...
-
-    @abstractmethod
-    async def save(self, booking: Booking) -> None:
+    async def update(self, booking: Booking) -> None:
         ...
 
     @abstractmethod
