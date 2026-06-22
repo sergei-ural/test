@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -60,20 +60,20 @@ class SQLAlchemyBookingRepository(BookingRepository):
                 raise BookingNotFound
             await session.commit()
 
-    # TODO: Сделать через update а не два запроса
     async def save(self, booking: Booking) -> None:
-        if booking.id is None:
-            raise BookingNotFound()
-
         async with self._session as session:
-            model = await session.get(BookingModel, booking.id)
-            if model is None:
+            result = await session.execute(
+                update(BookingModel)
+                .where(BookingModel.id == booking.id)
+                .values(
+                    datetime=booking.datetime,
+                    name=booking.name,
+                    service_type=booking.service_type,
+                    status=booking.status,
+                )
+            )
+            if result.rowcount == 0:
                 raise BookingNotFound()
-
-            model.datetime = booking.datetime
-            model.name = booking.name
-            model.service_type = booking.service_type
-            model.status = booking.status
             await session.commit()
 
     async def get_by(
@@ -95,7 +95,7 @@ class SQLAlchemyBookingRepository(BookingRepository):
         if not bookings:
             raise BookingNotFound()
         if len(bookings) > 1:
-            raise FindBookingMoreThanOne
+            raise FindBookingMoreThanOne()
         return bookings[0]
 
     async def find_by(
