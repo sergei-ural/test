@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
